@@ -12,9 +12,16 @@ echo ""
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # 颜色定义
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
+
+# 状态栏脚本依赖 jq 解析 JSON
+if ! command -v jq &> /dev/null; then
+    echo -e "${RED}✗${NC} 未安装 jq，请先安装（macOS: brew install jq）" >&2
+    exit 1
+fi
 
 # 1. 创建 .claude 目录（如果不存在）
 CLAUDE_DIR="$HOME/.claude"
@@ -54,27 +61,17 @@ else
         echo -e "${YELLOW}⚠${NC}  settings.json 中已存在 statusLine 配置"
         echo "   将保留现有配置（如需更新请手动修改）"
     else
-        # 使用 jq 添加 statusLine 配置
-        if command -v jq &> /dev/null; then
-            TMP_FILE=$(mktemp)
-            jq '. + {"statusLine": {"type": "command", "command": "~/.claude/statusline-command.sh"}}' "$SETTINGS_FILE" > "$TMP_FILE"
-            mv "$TMP_FILE" "$SETTINGS_FILE"
-            echo -e "${GREEN}✓${NC} 已更新现有 settings.json"
-        else
-            echo -e "${YELLOW}⚠${NC}  未安装 jq，请手动添加以下配置到 $SETTINGS_FILE："
-            echo ""
-            echo '  "statusLine": {'
-            echo '    "type": "command",'
-            echo '    "command": "~/.claude/statusline-command.sh"'
-            echo '  }'
-        fi
+        TMP_FILE=$(mktemp)
+        jq '. + {"statusLine": {"type": "command", "command": "~/.claude/statusline-command.sh"}}' "$SETTINGS_FILE" > "$TMP_FILE"
+        mv "$TMP_FILE" "$SETTINGS_FILE"
+        echo -e "${GREEN}✓${NC} 已更新现有 settings.json"
     fi
 fi
 
 # 5. 测试图标显示
 echo ""
 echo "🎨 测试 Nerd Fonts 图标显示："
-echo "   󱐋 AI模型 | 󰉋 目录 | 󰊢 Git | 󰓅 仪表盘 | 󰔵 求和 | 󰮯 现金"
+echo "   󱐋 AI模型 | 󰉋 目录 | 󰊢 Git | 󰓅 仪表盘 | 󰮯 现金"
 echo ""
 
 # 6. 完成提示
@@ -85,13 +82,14 @@ echo "📋 配置文件位置："
 echo "   脚本: $STATUSLINE_SCRIPT"
 echo "   配置: $SETTINGS_FILE"
 echo ""
-echo "🎯 状态栏将显示："
-echo "   • 󱐋 模型名称"
+echo "🎯 状态栏将显示（两行）："
+echo "   • 󱐋 模型名称 · effort"
 echo "   • 󰉋 当前目录"
 echo "   • 󰊢 Git 分支和同步状态"
-echo "   • 󰓅 上下文使用率（带进度条）"
-echo "   • 󰔵 Tokens 消耗"
-echo "   • 󰮯 会话花费"
+echo "   • 代码增删行数"
+echo "   • 󰓅 上下文使用率（进度条 + token 数）"
+echo "   • 5h / 7d 订阅用量及重置时间（Pro/Max）"
+echo "   • 󰮯 会话花费（同 /usage Total cost）"
 echo ""
 echo "🔄 请重启 Claude Code 查看效果！"
 echo ""
