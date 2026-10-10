@@ -30,6 +30,7 @@ IFS=$'\x1f' read -r model effort current_dir ctx_pct ctx_tokens ctx_size cost \
 GREEN=$'\033[32m'
 YELLOW=$'\033[33m'
 RED=$'\033[31m'
+DIM=$'\033[2m'
 RESET=$'\033[0m'
 
 color_for_pct() {
@@ -50,9 +51,18 @@ format_tokens() {
     fi
 }
 
-# macOS `date -r <epoch>`, GNU `date -d @<epoch>`
-format_epoch() {
-    date -r "$1" "+$2" 2>/dev/null || date -d "@$1" "+$2"
+# Time left until an epoch timestamp: "6d 12h", "3h 45m" or "12m"
+format_remaining() {
+    local left=$(($1 - $(date +%s)))
+    if [ "$left" -lt 0 ]; then left=0; fi
+    local d=$((left / 86400)) h=$((left % 86400 / 3600)) m=$((left % 3600 / 60))
+    if [ "$d" -gt 0 ]; then
+        printf '%dd %dh' "$d" "$h"
+    elif [ "$h" -gt 0 ]; then
+        printf '%dh %dm' "$h" "$m"
+    else
+        printf '%dm' "$m"
+    fi
 }
 
 # --- Line 1: model, directory, git, code changes ---
@@ -75,7 +85,7 @@ if [ -n "$branch" ]; then
         elif [ "$ahead" -eq 0 ]; then
             git_info="$git_info ↓$behind"
         else
-            git_info="$git_info ↕$ahead/$behind"
+            git_info="$git_info ↑$ahead ↓$behind"
         fi
     fi
 fi
@@ -104,11 +114,11 @@ line2=("󰓅 $context_info")
 # rate_limits is only sent to Pro/Max subscribers, after the first API response
 if [ -n "$five_pct" ]; then
     p=$(printf '%.0f' "$five_pct")
-    line2+=("5h $(color_for_pct "$p")${p}%${RESET} ↻$(format_epoch "${five_reset%.*}" '%H:%M')")
+    line2+=("5h $(color_for_pct "$p")${p}%${RESET} ${DIM}($(format_remaining "${five_reset%.*}"))${RESET}")
 fi
 if [ -n "$week_pct" ]; then
     p=$(printf '%.0f' "$week_pct")
-    line2+=("7d $(color_for_pct "$p")${p}%${RESET} ↻$(format_epoch "${week_reset%.*}" '%a')")
+    line2+=("7d $(color_for_pct "$p")${p}%${RESET} ${DIM}($(format_remaining "${week_reset%.*}"))${RESET}")
 fi
 
 line2+=("󰮯 \$$(printf '%.2f' "$cost")")

@@ -50,7 +50,8 @@ if [ ! -f "$SETTINGS_FILE" ]; then
 {
   "statusLine": {
     "type": "command",
-    "command": "~/.claude/statusline-command.sh"
+    "command": "~/.claude/statusline-command.sh",
+    "refreshInterval": 60
   }
 }
 JSON_EOF
@@ -62,7 +63,7 @@ else
         echo "   将保留现有配置（如需更新请手动修改）"
     else
         TMP_FILE=$(mktemp)
-        jq '. + {"statusLine": {"type": "command", "command": "~/.claude/statusline-command.sh"}}' "$SETTINGS_FILE" > "$TMP_FILE"
+        jq '. + {"statusLine": {"type": "command", "command": "~/.claude/statusline-command.sh", "refreshInterval": 60}}' "$SETTINGS_FILE" > "$TMP_FILE"
         mv "$TMP_FILE" "$SETTINGS_FILE"
         echo -e "${GREEN}✓${NC} 已更新现有 settings.json"
     fi
