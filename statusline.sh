@@ -30,8 +30,10 @@ IFS=$'\x1f' read -r model effort current_dir ctx_pct ctx_tokens ctx_size cost \
 GREEN=$'\033[32m'
 YELLOW=$'\033[33m'
 RED=$'\033[31m'
-DIM=$'\033[2m'
-RESET=$'\033[0m'
+GRAY=$'\033[90m'
+# Reset foreground only: a full reset (0m) would also drop the dim style
+# Claude Code applies to status line text
+RESET=$'\033[39m'
 
 color_for_pct() {
     if [ "$1" -ge 80 ]; then
@@ -114,11 +116,11 @@ line2=("󰓅 $context_info")
 # rate_limits is only sent to Pro/Max subscribers, after the first API response
 if [ -n "$five_pct" ]; then
     p=$(printf '%.0f' "$five_pct")
-    line2+=("5h $(color_for_pct "$p")${p}%${RESET} ${DIM}($(format_remaining "${five_reset%.*}"))${RESET}")
+    line2+=("5h $(color_for_pct "$p")${p}%${RESET} ${GRAY}($(format_remaining "${five_reset%.*}"))${RESET}")
 fi
 if [ -n "$week_pct" ]; then
     p=$(printf '%.0f' "$week_pct")
-    line2+=("7d $(color_for_pct "$p")${p}%${RESET} ${DIM}($(format_remaining "${week_reset%.*}"))${RESET}")
+    line2+=("7d $(color_for_pct "$p")${p}%${RESET} ${GRAY}($(format_remaining "${week_reset%.*}"))${RESET}")
 fi
 
 line2+=("󰮯 \$$(printf '%.2f' "$cost")")
