@@ -68,17 +68,8 @@ session_output=$(echo "$input" | jq '.context_window.total_output_tokens')
 total_tokens=$((session_input + session_output))
 tokens_k=$((total_tokens / 1000))
 
-# Calculate session spending
-# Pricing based on Claude 3.5 Sonnet (per million tokens)
-# Input: $3/MTok, Output: $15/MTok
-input_cost=$(echo "scale=4; $session_input * 3 / 1000000" | bc)
-output_cost=$(echo "scale=4; $session_output * 15 / 1000000" | bc)
-cost=$(echo "scale=4; $input_cost + $output_cost" | bc)
-
-# Format cost with leading zero
-if [[ "$cost" == .* ]]; then
-    cost="0$cost"
-fi
+# Session cost as computed by Claude Code (same figure as /usage "Total cost")
+cost=$(printf '%.2f' "$(echo "$input" | jq '.cost.total_cost_usd // 0')")
 
 # Format the status line with Nerd Fonts icons (方案A: 简洁现代)
 # Icons: 󱐋 (lightning-bolt-outline), 󰉋 (folder), 󰊢 (git-branch), 󰓅 (gauge), 󰔵 (sigma), 󰮯 (cash)
